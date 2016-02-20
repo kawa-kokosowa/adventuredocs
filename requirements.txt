@@ -1,0 +1,3 @@
+markdown
+docopt
+beautifulsoup4
