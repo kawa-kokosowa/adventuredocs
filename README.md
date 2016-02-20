@@ -25,6 +25,7 @@ The solution:
   * Amazing markdown syntax additions
   * Offer progress bar
   * A way to show/hide things *within* the section
+  * Optional "header images" per section--iconography is powerful!
 
 Things that'll be nice to have:
 
