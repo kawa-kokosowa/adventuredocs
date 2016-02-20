@@ -59,6 +59,7 @@ def build_sections(directory):
     with open(os.path.join(directory, "ORDER")) as f:
         ordered_section_file_names = [fname.strip() for fname in f.readlines()]
 
+    total_section_file_names = len(ordered_section_file_names)
     sections = []
 
     for file_name_index, file_name in enumerate(ordered_section_file_names):
@@ -66,6 +67,9 @@ def build_sections(directory):
 
         with open(file_path) as f:
             file_contents = parse(f.read())
+
+        file_contents += ("<aside class='progress'>%d/%d</aside>" %
+                         (file_name_index + 1, total_section_file_names))
 
         try:
             next_file_name = ordered_section_file_names[file_name_index + 1]
