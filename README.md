@@ -54,3 +54,7 @@ NEXT_SECTION:
    * wrap_up.md
    * develop_start.md
 ```
+
+## Relevant Resources:
+
+  * http://pythonhosted.org/Markdown/reference.html
