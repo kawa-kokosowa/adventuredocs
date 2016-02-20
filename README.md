@@ -4,6 +4,8 @@ Choose Your Own Adventure style software documentation from markdown.
 
 Markdown source, when parsed, outputs to a single HTML page.
 
+Demo: http://hypatia-software-org.github.io/adventuredocs/
+
 ## Test it out!
 
 We've included a demo! All you have to do to get started is:
