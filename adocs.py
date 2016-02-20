@@ -69,7 +69,8 @@ def build_sections(directory):
 
         try:
             next_file_name = ordered_section_file_names[file_name_index + 1]
-            next_section_link = ('<a href="#%s">Next Section</a>' %
+            next_section_link = ('<a href="#%s" class="next">'
+                                 'Next Section</a>' %
                                  section_id(next_file_name))
             file_contents += next_section_link
 
