@@ -8,10 +8,14 @@ Demo: http://hypatia-software-org.github.io/adventuredocs/
 
 ## Test it out!
 
-We've included a demo! All you have to do to get started is:
+We've included a demo! Checkout the `testdocs/` directory! It
+contains markdown files which represent sections, and an `ORDER`
+file which specifies the default order of the sections.
+
+All you have to do to get started is:
 
   1. `pip install -r requirements.txt`
-  2. `python adocs.py source_directory outputfile.html`
+  2. `python adocs.py testdocs outputfile.html`
 
 Then you can view `outputfile.html` in your web browser!
 
@@ -28,19 +32,14 @@ What we want to solve:
   * Intimidation-factor of documentation
   * Some other stuff I'm forgetting to put in here!
 
-How we're gonna solve them:
+The main ways we'll solve those problems:
 
-  * CYOA-style static stite generator for software documentation! Inspired by Google Forms.
+  * CYOA-style static stite generator for software documentation!
   * Each markdown file is a `<section>` with a respective `id` (it's filename).
   * An `ORDER` file which specifies the default order
-
-  * Offer list options (anchor/id links) which lead to another section, e.g., "You can run this with VirtualBox or VMWare. 1. Virtualbox 2. VMWare"
-  * Amazing markdown syntax additions
-  * Offer progress bar
+  * `NEXT_SECTION:` if in its own paragraph in markdown, the proceeding
+    list will be transformed into a list of links to other sections!
+  * Progress bar!
+  * A way to set variables/user settings, e.g., "using_linux" to display content
+    based on how a question was answered.
   * A way to show/hide things *within* the section
-  * Optional "header images" per section--iconography is powerful!
-
-Things that'll be nice to have:
-
-  * Syntax highlighting
-  * Templating
