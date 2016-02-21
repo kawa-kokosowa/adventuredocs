@@ -1,7 +1,17 @@
 """AdventureDocs
 
 Choose Your Own Adventure style software
-documentation from markdown
+documentation from markdown.
+
+Use markdown files to represent a section of instructions,
+and options to skip to a section, or just go to the next
+section.
+
+Load a directory of markdown files, which also includes a
+file named ORDER which specifies the default order of the
+markdown files. The ORDER enables us to have a "next
+section" link per section (while you can still present
+options to jump to other sections).
 
 Usage:
     adocs <source> <destination>
@@ -18,6 +28,22 @@ from bs4 import BeautifulSoup
 def section_id(markdown_file_path):
     """Create a section ID from a path to a markdown file.
 
+    Currently not very smart; don't expect it to sanitize
+    the ID or anything like that. This simply gets the
+    filename portion (without extension), but there's room
+    for expansion.
+
+    Arguments:
+        markdown_file_path (str): Path to a markdown file, it
+            may be relative or absolute.
+
+    Returns:
+        str: A valid HTML ID for this section.
+
+    Example:
+        >>> section_id('some/path/to/source/eaten-by-a-grue.md')
+        'eaten-by-a-grue'
+
     """
 
     __, section_file_name = os.path.split(markdown_file_path)
@@ -27,19 +53,37 @@ def section_id(markdown_file_path):
 
 
 class AdventureDoc(object):
+    """A directory of markdown files, with an ORDER file.
 
-    # NOTE: maybe not so much the source_directory, but soup
+    Constants:
+        STYLESHEET (str): Stylesheet file relative to
+            current directory. The stylesheet's contents
+            are prepended to the end-result HTML.
+        SECTION_CHOICE_KEYWORD (str): Triggers a proceeding
+            list to be a list of links to other sections.
+
+    """
+
+    STYLESHEET = "style.css"
+    SECTION_CHOICE_KEYWORD = "NEXT_SECTION:"
+
     def __init__(self, soup):
-        self.soup_root = soup
+        self.soup = soup
 
     def __str__(self):
 
-        return self.soup_root.prettify()
+        return self.soup.prettify()
 
-    @staticmethod
-    def parse_soup(soup):
-        """Modifies a BeautifulSoup, to make use of all our
-        wonderful features!
+    @classmethod
+    def add_special_seasoning(cls, soup):
+        """Add our special brand seasoning to the soup!
+        
+        Modifies a BeautifulSoup, to make use of all our
+        wonderful features! This does not return anything,
+        it simply modifies a supplied BeautifulSoup.
+
+        Arguments:
+            soup (BeautifulSoup): The soup to season!
 
         Returns:
             None: This method ONLY modifies the supplied soup.
@@ -48,15 +92,21 @@ class AdventureDoc(object):
 
         for ul in soup.find_all("ul"):
             # check if preceeding element is a paragraph
-            # with the text content of "CONTEXT_EXAMPLE:"
-            # or "NEXT_SECTION:".
+            # whose text is the section choice keyword!
             previous_paragraph = ul.find_previous_sibling("p")
+
             # NOTE: will implement later...
             # if previous_paragraph.text == "CONTEXT_EXAMPLE:":
+            # ... Which will be the toggle blocks. Though, this
+            # featuer may be replaced by simply having a way
+            # to set a global variable and render content based
+            # on what the user set said variable to, e.g.,
+            # platform is osx.
 
-            if previous_paragraph.text == "NEXT_SECTION:":
+            if previous_paragraph.text == cls.SECTION_CHOICE_KEYWORD:
 
-                # change each LI into a link
+                # We're going to make each LI's contents a link
+                # to the markdown file it specifies!
                 for li in ul.find_all("li"):
                     section_name = section_id(li.string)
                     link = soup.new_tag("a", href="#%s" % section_name)
@@ -66,11 +116,18 @@ class AdventureDoc(object):
 
     @staticmethod
     def get_order(directory):
-        """
+        """Collect the order of sections from directory/ORDER.
         
         Read the file names in directory/ORDER, which
         will point us to the files we need to read and the
         order in which they're read.
+
+        Arguments:
+            directory (str): --
+
+        Return:
+            list: The sections which compose the AdventureDoc,
+                in the correct order.
 
         """
 
@@ -80,24 +137,100 @@ class AdventureDoc(object):
         return ordered_section_file_names
 
     @classmethod
-    def from_directory(cls, directory):
-        """Build in order as defined in directory/ORDER
+    def put_in_nice_bowl(cls, soup):
+        """Let's present our soup nicely!
+        
+        Prepend <style> element whose contents
+        is from the STYLESHEET file.
 
-        This is a sloppy method of building the sections, we simply treat
-        each section's HTML as strings, finally joining them and making
-        tasty soup at the end for you!
+        Does not return anything; this modifies
+        the supplies soup.
+
+        Arguments:
+            soup (BeautifulSoup): The soup to add
+                style to.
+
+        Raises:
+            IOError: if cls.STYLESHEET not found!
+
+        """
+
+        with open(cls.STYLESHEET) as f:
+            stylesheet_contents = f.read()
+
+        style = soup.new_tag('style')
+        style.string = stylesheet_contents
+        soup.insert(0, style)
+
+    @classmethod
+    def build_section(cls, file_contents, file_name,
+                      ordered_section_file_names):
+
+        """Create the HTML for the provided file contents!
+
+        Arguments:
+            file_contents (str):
+            file_name (str):
+            ordered_section_file_names (list[str]):
+
+        Returns:
+            BeautifulSoup: --
+
+        """
+
+        total_section_file_names = len(ordered_section_file_names)
+        file_name_index = ordered_section_file_names.index(file_name)
+
+        # Transform our markdown file contents into soup which
+        # has been graced by our special seasoning!
+        html = markdown.markdown(file_contents)
+        section_soup = BeautifulSoup(html, "html.parser")
+        cls.add_special_seasoning(section_soup)
+
+        # Section Progress/Position
+        aside = section_soup.new_tag("aside")
+        aside['class'] = 'progress'
+        aside.string = '%d/%d' % (file_name_index + 1,
+                                  total_section_file_names)
+        section_soup.append(aside)
+
+        # If there's a next section add the "next section" link!
+        try:
+            next_file_name = ordered_section_file_names[file_name_index + 1]
+            section_name = section_id(next_file_name)
+            link = section_soup.new_tag("a", href="#" + section_name)
+            link["class"] = "next"
+            link.string = "Next Section"
+            section_soup.append(link)
+
+        except IndexError:
+            pass
+
+        section_wrapper = section_soup.new_tag("section")
+        section_wrapper["id"] = section_id(file_name)
+
+        section_wrapper.append(section_soup)
+
+        return section_wrapper
+
+    @classmethod
+    def from_directory(cls, directory):
+        """Build an AdventureDoc by processing a directory.
+
+        Arguments:
+            directory (str): Path to the directory containing
+                the ORDER file along with the sections as
+                markdown files.
+
+        Returns:
+            AdventureDoc:
 
         """
 
         ordered_section_file_names = cls.get_order(directory)
-        sections = []
+        all_sections_soup = BeautifulSoup('', 'html.parser')
 
-        # we're going to keep track of "progress" per section,
-        # which is (basically) a fraction denoting the current
-        # index out of the largest index.
-        total_section_file_names = len(ordered_section_file_names)
-
-        for file_name_index, file_name in enumerate(ordered_section_file_names):
+        for file_name in ordered_section_file_names:
             # The ORDER file specifies each filename relative to itself, thusly,
             # we must prepend the directory these files are in to read them.
             file_path = os.path.join(directory, file_name)
@@ -105,51 +238,13 @@ class AdventureDoc(object):
             with open(file_path) as f:
                 file_contents = f.read()
 
-            # Now that we have the file contents, we're going to translate
-            # that markdown source into an HTML string, and prepend and
-            # append stuff to said string!
-            html = markdown.markdown(file_contents)
+            section_soup = cls.build_section(file_contents, file_name,
+                                             ordered_section_file_names)
+            all_sections_soup.append(section_soup)
 
-            section_soup = BeautifulSoup(html, "html.parser")
-            cls.parse_soup(section_soup)
+        cls.put_in_nice_bowl(all_sections_soup)
 
-            # XXX
-            aside = section_soup.new_tag("aside")
-            aside['class'] = 'progress'
-            aside.string = '%d/%d' % (file_name_index + 1,
-                                      total_section_file_names)
-            section_soup.append(aside)
-
-            # If there's a next section add the "next section" link!
-            try:
-                next_file_name = ordered_section_file_names[file_name_index + 1]
-                link = section_soup.new_tag("a", href="#" + section_id(next_file_name))
-                link["class"] = "next"
-                link.string = "Next Section"
-                section_soup.append(link)
-
-            except IndexError:
-                pass
-
-            section = '<section id="%s">%s</section>' % (section_id(file_name),
-                                                         section_soup.prettify())
-            sections.append(section)
-
-        # Join the sections together
-        sections_string = '\n'.join(sections)
-
-        # Add style for the sections.
-        with open("style.css") as f:
-            stylesheet_contents = f.read()
-            inline_css = "<style>%s</style>" % stylesheet_contents
-
-        html = inline_css + sections_string
-
-        # Make tasty soup, then add some salt to it and serve!
-        soup = BeautifulSoup(html, 'html.parser')
-        cls.parse_soup(soup)
-
-        return AdventureDoc(soup)
+        return AdventureDoc(all_sections_soup)
 
 
 if __name__ == '__main__':
