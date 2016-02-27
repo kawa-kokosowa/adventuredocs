@@ -61,11 +61,19 @@ class AdventureDoc(object):
             are prepended to the end-result HTML.
         SECTION_CHOICE_KEYWORD (str): Triggers a proceeding
             list to be a list of links to other sections.
+        HIGHLIGHTJS_CSS (str): Hosted HighlightJS CSS/stylesheet
+            URI. See: highlightjs.org.
+        HIGHLIGHTJS_JS (str): Hosted HighlightJS JavaScript
+            URI. See: highlightjs.org.
 
     """
 
     STYLESHEET = "style.css"
     SECTION_CHOICE_KEYWORD = "NEXT_SECTION:"
+    HIGHLIGHTJS_CSS = ("http://cdnjs.cloudflare.com/ajax/libs/highlight.js/"
+                       "9.2.0/styles/default.min.css")
+    HIGHLIGHTJS_JS = ("http://cdnjs.cloudflare.com/ajax/libs/highlight.js/"
+                      "9.2.0/highlight.min.js")
 
     def __init__(self, soup):
         self.soup = soup
@@ -141,7 +149,8 @@ class AdventureDoc(object):
         """Let's present our soup nicely!
         
         Prepend <style> element whose contents
-        is from the STYLESHEET file.
+        is from the STYLESHEET file. Also add
+        the code necessary for syntax highlighting.
 
         Does not return anything; this modifies
         the supplies soup.
@@ -158,9 +167,26 @@ class AdventureDoc(object):
         with open(cls.STYLESHEET) as f:
             stylesheet_contents = f.read()
 
+        # Add our custom stylesheet
         style = soup.new_tag('style')
         style.string = stylesheet_contents
         soup.insert(0, style)
+
+        # Add the HighlightJS StyleSheet
+        highlightjs_css = soup.new_tag('link')
+        highlightjs_css["rel"] = 'stylesheet'
+        highlightjs_css['href'] = cls.HIGHLIGHTJS_CSS
+        soup.insert(0, highlightjs_css)
+
+        # Add the HighlightJS JavaScript
+        highlightjs_js = soup.new_tag('script')
+        highlightjs_js["src"] = cls.HIGHLIGHTJS_JS
+        soup.insert(0, highlightjs_js)
+
+        # Add the execute script/init for HighlightJS
+        init_script = soup.new_tag('script')
+        init_script.string = 'hljs.initHighlightingOnLoad();'
+        soup.append(init_script)
 
     @classmethod
     def build_section(cls, file_contents, file_name,

@@ -6,14 +6,17 @@
  * White: #fff
  * Khaki: #B8B89F
  */
+
 @import url(https://fonts.googleapis.com/css?family=Yeseva+One);
 @import url(https://fonts.googleapis.com/css?family=Merriweather+Sans);
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
   position: relative;
 }
+
 body {
   color: #000;
   background-color: #fff;
@@ -22,10 +25,12 @@ body {
   width: 100vw;
   perspective: 600;
 }
+
 a:link,
 a:visited {
   color: #ff3b77;
 }
+
 .next:visited,
 .next {
   display: inline-block;
@@ -39,6 +44,7 @@ a:visited {
   font-weight: bold;
   text-decoration: none;
 }
+
 .progress {
   position: absolute;
   top: 0;
@@ -46,6 +52,7 @@ a:visited {
   padding: 1.5rem 60px;
   background-color: #b8b89f;
 }
+
 section {
   background: #fff;
   padding: 3rem;
@@ -56,6 +63,7 @@ section {
   width: 100vw;
   overflow-y: scroll;
 }
+
 section h1 {
   color: #52656B;
   font-size: 6rem;
@@ -64,24 +72,33 @@ section h1 {
   line-height: 1;
   margin-bottom: 1.5rem;
 }
+
 section p {
   margin-top: 1.5rem;
 }
+
 section ul {
   margin: 1.5rem 0 1.5rem 3rem;
 }
+
 section + section {
   visibility: hidden;
   opacity: 0;
   transition: all 0.5s;
 }
+
 section:target {
   visibility: visible;
   opacity: 1;
   transform-style: preserve-3d;
   animation: flip 0.5s;
 }
+
 @keyframes flip {
   from { transform: rotateY(180deg); }
   to { transform: rotateY(0deg); }
+}
+
+pre code {
+  margin: 1.5rem 0;
 }
