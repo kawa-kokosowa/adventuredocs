@@ -1,3 +1,6 @@
+<script src="http://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.2.0/highlight.min.js">
+</script>
+<link href="http://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.2.0/styles/default.min.css" rel="stylesheet"/>
 <style>
  /* COLORS
  *
@@ -7,14 +10,17 @@
  * White: #fff
  * Khaki: #B8B89F
  */
+
 @import url(https://fonts.googleapis.com/css?family=Yeseva+One);
 @import url(https://fonts.googleapis.com/css?family=Merriweather+Sans);
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
   position: relative;
 }
+
 body {
   color: #000;
   background-color: #fff;
@@ -23,10 +29,12 @@ body {
   width: 100vw;
   perspective: 600;
 }
+
 a:link,
 a:visited {
   color: #ff3b77;
 }
+
 .next:visited,
 .next {
   display: inline-block;
@@ -40,6 +48,7 @@ a:visited {
   font-weight: bold;
   text-decoration: none;
 }
+
 .progress {
   position: absolute;
   top: 0;
@@ -47,6 +56,7 @@ a:visited {
   padding: 1.5rem 60px;
   background-color: #b8b89f;
 }
+
 section {
   background: #fff;
   padding: 3rem;
@@ -57,6 +67,7 @@ section {
   width: 100vw;
   overflow-y: scroll;
 }
+
 section h1 {
   color: #52656B;
   font-size: 6rem;
@@ -65,94 +76,200 @@ section h1 {
   line-height: 1;
   margin-bottom: 1.5rem;
 }
+
 section p {
   margin-top: 1.5rem;
 }
+
 section ul {
   margin: 1.5rem 0 1.5rem 3rem;
 }
+
 section + section {
   visibility: hidden;
   opacity: 0;
   transition: all 0.5s;
 }
+
 section:target {
   visibility: visible;
   opacity: 1;
   transform-style: preserve-3d;
   animation: flip 0.5s;
 }
+
 @keyframes flip {
   from { transform: rotateY(180deg); }
   to { transform: rotateY(0deg); }
 }
+
+pre code {
+  margin: 1.5rem 0;
+}
 </style>
 <section id="getting-started">
+<progress max="3" value="1">
+</progress>
 <h1>
- Getting Started
+ AdventureDocs: Getting Started
 </h1>
 <p>
- You'll want to install our software like this:
+ Choose Your Own Adventure style software documentation from markdown.
 </p>
 <p>
- CONTEXT_EXAMPLE:
+ Markdown source, when parsed, outputs to a single HTML page.
 </p>
-<ul>
- <li>
-  install_on_osx.md
- </li>
- <li>
-  install_on_linux.md
- </li>
-</ul>
 <p>
- Once you're done you can wrap up, or if you wanna
-develop we have specific instructions for that:
+ Here's how it's used:
+</p>
+<pre><code>adoc = AdventureDoc.from_directory("some_dir")
+print(adoc)
+</code></pre>
+<p>
+ You can read notes or just skip to the end demo:
 </p>
 <p>
  NEXT_SECTION:
 </p>
 <ul>
  <li>
-  <a href="#wrapup">
-   wrapup
+  <a href="#notes">
+   notes
   </a>
  </li>
  <li>
-  <a href="#develop_start">
-   develop_start
+  <a href="#demo">
+   demo
   </a>
  </li>
 </ul>
-<aside class="progress">
- 1/3
-</aside>
-<a class="next" href="#develop_start">
+<a class="next" href="#notes">
  Next Section
 </a>
 </section>
-<section id="develop_start">
+<section id="notes">
+<progress max="3" value="2">
+</progress>
 <h1>
- Develop Start
+ AdventureDoc Notes
 </h1>
 <p>
- Blah blah blah...
+ What we want to solve:
 </p>
-<aside class="progress">
- 2/3
-</aside>
-<a class="next" href="#wrapup">
+<ul>
+ <li>
+  Difficulty of maintaining a monolith of documentation
+ </li>
+ <li>
+  Difficulty of
+  <em>
+   reading
+  </em>
+  a monolith of documentaiton
+ </li>
+ <li>
+  Variablity of documentation, instructions which depend on
+    specific needs, use cases, platforms, etc.
+ </li>
+ <li>
+  Intimidation-factor of documentation
+ </li>
+ <li>
+  Some other stuff I'm forgetting to put in here!
+ </li>
+</ul>
+<p>
+ The main ways we'll solve those problems:
+</p>
+<ul>
+ <li>
+  CYOA-style static stite generator for software documentation!
+ </li>
+ <li>
+  Each markdown file is a
+  <code>
+   &lt;section&gt;
+  </code>
+  with a respective
+  <code>
+   id
+  </code>
+  (it's filename).
+ </li>
+ <li>
+  An
+  <code>
+   ORDER
+  </code>
+  file which specifies the default order
+ </li>
+ <li>
+  <code>
+   NEXT_SECTION:
+  </code>
+  if in its own paragraph in markdown, the proceeding
+    list will be transformed into a list of links to other sections!
+ </li>
+ <li>
+  Progress bar!
+ </li>
+ <li>
+  A way to set variables/user settings, e.g., "using_linux" to display content
+    based on how a question was answered.
+ </li>
+ <li>
+  A way to show/hide things
+  <em>
+   within
+  </em>
+  the section
+ </li>
+</ul>
+<a class="next" href="#demo">
  Next Section
 </a>
 </section>
-<section id="wrapup">
+<section id="demo">
+<progress max="3" value="3">
+</progress>
 <h1>
- Wrapup
+ Test out AdventureDocs
 </h1>
 <p>
- Post-install notes.
+ We've included a demo! Checkout the
+ <code>
+  testdocs/
+ </code>
+ directory! It
+contains markdown files which represent sections, and an
+ <code>
+  ORDER
+ </code>
+ file which specifies the default order of the sections.
 </p>
-<aside class="progress">
- 3/3
-</aside>
+<p>
+ All you have to do to get started is:
+</p>
+<ol>
+ <li>
+  <code>
+   pip install -r requirements.txt
+  </code>
+ </li>
+ <li>
+  <code>
+   python adocs.py testdocs outputfile.html
+  </code>
+ </li>
+</ol>
+<p>
+ Then you can view
+ <code>
+  outputfile.html
+ </code>
+ in your web browser!
+</p>
 </section>
+<script>
+ hljs.initHighlightingOnLoad();
+</script>
