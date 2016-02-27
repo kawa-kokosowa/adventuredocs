@@ -1,3 +1,0 @@
-# Develop Start
-
-Blah blah blah...

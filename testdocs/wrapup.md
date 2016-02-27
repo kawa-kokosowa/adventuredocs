@@ -1,3 +1,0 @@
-# Wrapup
-
-Post-install notes.

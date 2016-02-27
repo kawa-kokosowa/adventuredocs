@@ -1,22 +1,17 @@
-# Getting Started
+# AdventureDocs: Getting Started
 
-You'll want to install our software like this:
+Choose Your Own Adventure style software documentation from markdown.
 
-CONTEXT_EXAMPLE:
+Markdown source, when parsed, outputs to a single HTML page.
 
-  * install_on_osx.md
-  * install_on_linux.md
+Here's how it's used:
 
-Here's an example code snippet:
+    adoc = AdventureDoc.from_directory("some_dir")
+    print(adoc)
 
-    def some_function(an_arg):
-
-        return an_arg
-
-Once you're done you can wrap up, or if you wanna
-develop we have specific instructions for that:
+You can read notes or just skip to the end demo:
 
 NEXT_SECTION:
 
-  * wrapup.md
-  * develop_start.md
+  * notes.md
+  * demo.md
