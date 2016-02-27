@@ -123,6 +123,25 @@ class AdventureDoc(object):
                     li.append(link)
 
     @staticmethod
+    def prepend_progress_bar(soup, actual_value, maximum_value):
+        """Add <progress> bar to top of soup.
+
+        Create an HTML5 progress bar based on a fraction
+        of actual_value/maximum_value.
+
+        Arguments:
+            soup (BeautifulSoup): The soup to add a progress
+                bar to (insert at top).
+
+        """
+
+        progress = soup.new_tag("progress")
+        progress['value'] = actual_value
+        progress['max'] = maximum_value
+
+        soup.insert(0, progress)
+
+    @staticmethod
     def get_order(directory):
         """Collect the order of sections from directory/ORDER.
         
@@ -214,11 +233,8 @@ class AdventureDoc(object):
         cls.add_special_seasoning(section_soup)
 
         # Section Progress/Position
-        aside = section_soup.new_tag("aside")
-        aside['class'] = 'progress'
-        aside.string = '%d/%d' % (file_name_index + 1,
-                                  total_section_file_names)
-        section_soup.append(aside)
+        cls.prepend_progress_bar(section_soup, file_name_index + 1,
+                                 total_section_file_names)
 
         # If there's a next section add the "next section" link!
         try:
