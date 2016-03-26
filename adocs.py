@@ -111,7 +111,7 @@ class AdventureDoc(object):
             # on what the user set said variable to, e.g.,
             # platform is osx.
 
-            if previous_paragraph.text == cls.SECTION_CHOICE_KEYWORD:
+            if (previous_paragraph is not None) and (previous_paragraph.text == cls.SECTION_CHOICE_KEYWORD):
 
                 # We're going to make each LI's contents a link
                 # to the markdown file it specifies!
