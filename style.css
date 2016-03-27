@@ -1,14 +1,5 @@
-/* COLORS
- *
- * Slate Blue: #52656B
- * Pink: #FF3B77
- * Green: #CDFF00
- * White: #fff
- * Khaki: #B8B89F
- */
-
-@import url(https://fonts.googleapis.com/css?family=Yeseva+One);
 @import url(https://fonts.googleapis.com/css?family=Merriweather+Sans);
+@import url(https://fonts.googleapis.com/css?family=Merriweather:700);
 
 * {
   margin: 0;
@@ -18,7 +9,7 @@
 }
 
 body {
-  color: #000;
+  color: #333;
   background-color: #fff;
   font: 400 32px/1.5 'Merriweather Sans', sans-serif;  /* total row height is 48px */
   height: 100vh;
@@ -28,29 +19,47 @@ body {
 
 a:link,
 a:visited {
-  color: #ff3b77;
+  color: #01B0F0;
+}
+
+.jumpto {
+  margin: 3rem 20px;
+  padding: 0 20px;
+  border: 2px dotted #AEEE00;
+  display: block;
+}
+
+.jumpto p {
+  font-weight: bold;
+}
+
+.jumpto ul {
+  list-style: none;
+  margin-left: 20px;
+}
+
+.jumpto li:before {
+  content: "\0021AA ";
+  color: #FF358B;
 }
 
 .next:visited,
 .next {
   display: inline-block;
-  background-color: #cdff00;
-  color: #000;
+  background-color: #AEEE00;
   text-align: center;
   padding: 0.75rem 20px 0.75rem;
   border-radius: 4px;
-  box-shadow: 0 5px 0 #000;
+  color: #333 !important;
   margin: 3rem 0 1.5rem 0;
   font-weight: bold;
   text-decoration: none;
 }
 
-.progress {
-  position: absolute;
-  top: 0;
-  right: 0;
-  padding: 1.5rem 60px;
-  background-color: #b8b89f;
+progress {
+  width: 100%;
+  margin-bottom: 1.5rem;
+  opacity: 0.5;
 }
 
 section {
@@ -58,18 +67,26 @@ section {
   padding: 3rem;
   position: absolute;
   top: 0;
-  left: 0;
   height: 100vh;
   width: 100vw;
+  margin: 0 auto;
   overflow-y: scroll;
 }
 
+section h1,
+section h2,
+section h3,
+section h4 {
+  font-family: "Merriweather", serif;
+  font-weight: 700;
+  color: #FF358B;
+  margin: 1.5rem 0;
+}
+
 section h1 {
-  color: #52656B;
   font-size: 6rem;
-  font-family: "Yevesa One", cursive;
-  font-weight: bold;
   line-height: 1;
+  margin-top: 0;
   margin-bottom: 1.5rem;
 }
 
@@ -102,3 +119,4 @@ section:target {
 pre code {
   margin: 1.5rem 0;
 }
+

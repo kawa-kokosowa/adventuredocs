@@ -111,7 +111,18 @@ class AdventureDoc(object):
             # on what the user set said variable to, e.g.,
             # platform is osx.
 
-            if (previous_paragraph is not None) and (previous_paragraph.text == cls.SECTION_CHOICE_KEYWORD):
+            if ((previous_paragraph is not None) and
+                (previous_paragraph.text == cls.SECTION_CHOICE_KEYWORD)):
+
+
+                # Create a <nav> container and put a paragraph
+                # "Jump to..." inside it.
+                jump_to_nav = soup.new_tag("nav", **{'class': "jumpto"})
+                paragraph = soup.new_tag("p")
+                paragraph.string = "Jump to..."
+                jump_to_nav.append(paragraph)
+
+                list_of_options = soup.new_tag("ul")
 
                 # We're going to make each LI's contents a link
                 # to the markdown file it specifies!
@@ -119,8 +130,19 @@ class AdventureDoc(object):
                     section_name = section_id(li.string)
                     link = soup.new_tag("a", href="#%s" % section_name)
                     link.string = section_name
-                    li.string = ''
-                    li.append(link)
+
+                    new_list_item = soup.new_tag("li")
+                    new_list_item.append(link)
+
+                    list_of_options.append(new_list_item)
+
+                # we created a new list, remove the old one!
+                ul.replaceWith('')
+
+                # put everything in our nice jumpto nav
+                # container
+                jump_to_nav.append(list_of_options)
+                previous_paragraph.replaceWith(jump_to_nav)
 
     @staticmethod
     def prepend_progress_bar(soup, actual_value, maximum_value):
