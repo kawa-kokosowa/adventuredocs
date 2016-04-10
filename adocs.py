@@ -1,3 +1,5 @@
+# encoding=utf8
+
 """AdventureDocs
 
 Choose Your Own Adventure style software
@@ -19,37 +21,12 @@ Usage:
 """
 
 import os
+import glob
 import docopt
 import markdown
 
 from bs4 import BeautifulSoup
 
-
-def section_id(markdown_file_path):
-    """Create a section ID from a path to a markdown file.
-
-    Currently not very smart; don't expect it to sanitize
-    the ID or anything like that. This simply gets the
-    filename portion (without extension), but there's room
-    for expansion.
-
-    Arguments:
-        markdown_file_path (str): Path to a markdown file, it
-            may be relative or absolute.
-
-    Returns:
-        str: A valid HTML ID for this section.
-
-    Example:
-        >>> section_id('some/path/to/source/eaten-by-a-grue.md')
-        'eaten-by-a-grue'
-
-    """
-
-    __, section_file_name = os.path.split(markdown_file_path)
-    section_id, __ = os.path.splitext(section_file_name)
-
-    return section_id
 
 
 class AdventureDoc(object):
@@ -80,7 +57,34 @@ class AdventureDoc(object):
 
     def __str__(self):
 
-        return self.soup.prettify()
+        return self.soup.prettify().encode("UTF-8")
+
+    @staticmethod
+    def section_id(markdown_file_path):
+        """Create a section ID from a path to a markdown file.
+
+        Currently not very smart; don't expect it to sanitize
+        the ID or anything like that. This simply gets the
+        filename portion (without extension), but there's room
+        for expansion.
+
+        Arguments:
+            markdown_file_path (str): Path to a markdown file, it
+                may be relative or absolute.
+
+        Returns:
+            str: A valid HTML ID for this section.
+
+        Example:
+            >>> section_id('some/path/to/source/eaten-by-a-grue.md')
+            'eaten-by-a-grue'
+
+        """
+
+        __, section_file_name = os.path.split(markdown_file_path)
+        section_id, __ = os.path.splitext(section_file_name)
+
+        return section_id
 
     @classmethod
     def add_special_seasoning(cls, soup):
@@ -98,51 +102,27 @@ class AdventureDoc(object):
 
         """
 
-        for ul in soup.find_all("ul"):
-            # check if preceeding element is a paragraph
-            # whose text is the section choice keyword!
-            previous_paragraph = ul.find_previous_sibling("p")
+        # Each plugin is simply a single Python file.
+        plugin_script_paths = []
 
-            # NOTE: will implement later...
-            # if previous_paragraph.text == "CONTEXT_EXAMPLE:":
-            # ... Which will be the toggle blocks. Though, this
-            # featuer may be replaced by simply having a way
-            # to set a global variable and render content based
-            # on what the user set said variable to, e.g.,
-            # platform is osx.
+        for python_script_to_add in glob.glob('plugins/*.py'):
+            
+            if python_script_to_add == "plugins/__init__.py":
+                continue
 
-            if ((previous_paragraph is not None) and
-                (previous_paragraph.text == cls.SECTION_CHOICE_KEYWORD)):
+            plugin_script_paths.append(python_script_to_add)
+                                        
 
+        for script_path in plugin_script_paths:
+            # import the module
+            module_name, __ = os.path.splitext((os.path.
+                                                basename(script_path)))
+            plugin = __import__("plugins." + module_name,
+                                fromlist=["change_soup"])
+            change_soup_function = getattr(plugin, "change_soup")
 
-                # Create a <nav> container and put a paragraph
-                # "Jump to..." inside it.
-                jump_to_nav = soup.new_tag("nav", **{'class': "jumpto"})
-                paragraph = soup.new_tag("p")
-                paragraph.string = "Jump to..."
-                jump_to_nav.append(paragraph)
-
-                list_of_options = soup.new_tag("ul")
-
-                # We're going to make each LI's contents a link
-                # to the markdown file it specifies!
-                for li in ul.find_all("li"):
-                    section_name = section_id(li.string)
-                    link = soup.new_tag("a", href="#%s" % section_name)
-                    link.string = section_name
-
-                    new_list_item = soup.new_tag("li")
-                    new_list_item.append(link)
-
-                    list_of_options.append(new_list_item)
-
-                # we created a new list, remove the old one!
-                ul.replaceWith('')
-
-                # put everything in our nice jumpto nav
-                # container
-                jump_to_nav.append(list_of_options)
-                previous_paragraph.replaceWith(jump_to_nav)
+            # do the thing
+            plugin.change_soup(cls, soup)
 
     @staticmethod
     def prepend_progress_bar(soup, actual_value, maximum_value):
@@ -250,6 +230,7 @@ class AdventureDoc(object):
 
         # Transform our markdown file contents into soup which
         # has been graced by our special seasoning!
+        file_contents = unicode(file_contents, 'utf-8')
         html = markdown.markdown(file_contents)
         section_soup = BeautifulSoup(html, "html.parser")
         cls.add_special_seasoning(section_soup)
@@ -261,7 +242,7 @@ class AdventureDoc(object):
         # If there's a next section add the "next section" link!
         try:
             next_file_name = ordered_section_file_names[file_name_index + 1]
-            section_name = section_id(next_file_name)
+            section_name = cls.section_id(next_file_name)
             link = section_soup.new_tag("a", href="#" + section_name)
             link["class"] = "next"
             link.string = "Next Section"
@@ -271,7 +252,7 @@ class AdventureDoc(object):
             pass
 
         section_wrapper = section_soup.new_tag("section")
-        section_wrapper["id"] = section_id(file_name)
+        section_wrapper["id"] = cls.section_id(file_name)
 
         section_wrapper.append(section_soup)
 
@@ -316,5 +297,5 @@ if __name__ == '__main__':
     source_directory = arguments["<source>"]
     adoc = AdventureDoc.from_directory(source_directory)
 
-    with open(arguments["<destination>"], 'w') as f:
+    with open(arguments["<destination>"], 'wb') as f:
         f.write(str(adoc))
