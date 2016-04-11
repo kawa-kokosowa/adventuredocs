@@ -1,3 +1,5 @@
+# encoding=utf8
+
 """AdventureDocs
 
 Choose Your Own Adventure style software
@@ -19,37 +21,58 @@ Usage:
 """
 
 import os
+import glob
 import docopt
 import markdown
 
 from bs4 import BeautifulSoup
 
 
-def section_id(markdown_file_path):
-    """Create a section ID from a path to a markdown file.
+class Section(object):
+    """"
 
-    Currently not very smart; don't expect it to sanitize
-    the ID or anything like that. This simply gets the
-    filename portion (without extension), but there's room
-    for expansion.
-
-    Arguments:
-        markdown_file_path (str): Path to a markdown file, it
-            may be relative or absolute.
-
-    Returns:
-        str: A valid HTML ID for this section.
-
-    Example:
-        >>> section_id('some/path/to/source/eaten-by-a-grue.md')
-        'eaten-by-a-grue'
+    Attributes:
+        index (int): --
+        name (str): --
+        path (str): --
+        soup (BeautifulSoup): --
 
     """
 
-    __, section_file_name = os.path.split(markdown_file_path)
-    section_id, __ = os.path.splitext(section_file_name)
+    def __init__(self, index, name, path, soup):
+        self.index = index
+        self.name = name
+        self.path = path
+        self.soup = soup
 
-    return section_id
+    @classmethod
+    def from_file(cls, section_index, path_to_markdown_file):
+        """Create a section object by reading
+        in a markdown file from path!
+
+        Arguments:
+            section_index (int):
+            path_to_markdown_file (str): --
+
+        Returns:
+            Section
+
+        """
+
+        with open(path_to_markdown_file) as f:
+            file_contents = unicode(f.read(), 'utf-8')
+
+        html = markdown.markdown(file_contents)
+        section_soup = BeautifulSoup(html, "html.parser")
+
+        # get the file name without the extension
+        __, section_file_name = os.path.split(path_to_markdown_file)
+        section_name, __ = os.path.splitext(section_file_name)
+
+        return cls(index=section_index,
+                   path=path_to_markdown_file,
+                   soup=section_soup,
+                   name=section_name)
 
 
 class AdventureDoc(object):
@@ -75,118 +98,81 @@ class AdventureDoc(object):
     HIGHLIGHTJS_JS = ("http://cdnjs.cloudflare.com/ajax/libs/highlight.js/"
                       "9.2.0/highlight.min.js")
 
-    def __init__(self, soup):
-        self.soup = soup
+    def __init__(self, sections):
+        self.sections = sections
 
-    def __str__(self):
+    def build(self):
+        all_sections_wrapper = BeautifulSoup('', 'html.parser')
 
-        return self.soup.prettify()
+        for section_soup in self.sections:
+            section_soup = self.use_plugins_and_wrap(section_soup)
+            all_sections_wrapper.append(section_soup)
 
-    @classmethod
-    def add_special_seasoning(cls, soup):
-        """Add our special brand seasoning to the soup!
-        
-        Modifies a BeautifulSoup, to make use of all our
-        wonderful features! This does not return anything,
-        it simply modifies a supplied BeautifulSoup.
+        self.add_theme_to_soup(all_sections_wrapper)
 
-        Arguments:
-            soup (BeautifulSoup): The soup to season!
+        return all_sections_wrapper.prettify().encode("UTF-8")
+
+    @staticmethod
+    def get_sections(directory):
+        """Collect the files specified in the
+        ORDER file, returning a list of
+        dictionary representations of each file.
 
         Returns:
-            None: This method ONLY modifies the supplied soup.
-
-        """
-
-        for ul in soup.find_all("ul"):
-            # check if preceeding element is a paragraph
-            # whose text is the section choice keyword!
-            previous_paragraph = ul.find_previous_sibling("p")
-
-            # NOTE: will implement later...
-            # if previous_paragraph.text == "CONTEXT_EXAMPLE:":
-            # ... Which will be the toggle blocks. Though, this
-            # featuer may be replaced by simply having a way
-            # to set a global variable and render content based
-            # on what the user set said variable to, e.g.,
-            # platform is osx.
-
-            if ((previous_paragraph is not None) and
-                (previous_paragraph.text == cls.SECTION_CHOICE_KEYWORD)):
-
-
-                # Create a <nav> container and put a paragraph
-                # "Jump to..." inside it.
-                jump_to_nav = soup.new_tag("nav", **{'class': "jumpto"})
-                paragraph = soup.new_tag("p")
-                paragraph.string = "Jump to..."
-                jump_to_nav.append(paragraph)
-
-                list_of_options = soup.new_tag("ul")
-
-                # We're going to make each LI's contents a link
-                # to the markdown file it specifies!
-                for li in ul.find_all("li"):
-                    section_name = section_id(li.string)
-                    link = soup.new_tag("a", href="#%s" % section_name)
-                    link.string = section_name
-
-                    new_list_item = soup.new_tag("li")
-                    new_list_item.append(link)
-
-                    list_of_options.append(new_list_item)
-
-                # we created a new list, remove the old one!
-                ul.replaceWith('')
-
-                # put everything in our nice jumpto nav
-                # container
-                jump_to_nav.append(list_of_options)
-                previous_paragraph.replaceWith(jump_to_nav)
-
-    @staticmethod
-    def prepend_progress_bar(soup, actual_value, maximum_value):
-        """Add <progress> bar to top of soup.
-
-        Create an HTML5 progress bar based on a fraction
-        of actual_value/maximum_value.
-
-        Arguments:
-            soup (BeautifulSoup): The soup to add a progress
-                bar to (insert at top).
-
-        """
-
-        progress = soup.new_tag("progress")
-        progress['value'] = actual_value
-        progress['max'] = maximum_value
-
-        soup.insert(0, progress)
-
-    @staticmethod
-    def get_order(directory):
-        """Collect the order of sections from directory/ORDER.
-        
-        Read the file names in directory/ORDER, which
-        will point us to the files we need to read and the
-        order in which they're read.
-
-        Arguments:
-            directory (str): --
-
-        Return:
-            list: The sections which compose the AdventureDoc,
-                in the correct order.
+            list[Section]: list of sections which
 
         """
 
         with open(os.path.join(directory, "ORDER")) as f:
-            ordered_section_file_names = [fname.strip() for fname in f.readlines()]
+            order_file_lines = f.readlines()
 
-        return ordered_section_file_names
+        ordered_section_file_paths = []
+
+        for line_from_order_file in order_file_lines:
+            section_path = os.path.join(directory, line_from_order_file)
+            ordered_section_file_paths.append(section_path.strip())
+
+        sections = []
+
+        for i, section_file_path in enumerate(ordered_section_file_paths):
+            sections.append(Section.from_file(i, section_file_path))
+
+        return sections
+
+    # NOTE: this currently actually changes the section's
+    # beautiful soup but should make copy instead!
+    def use_plugins_and_wrap(self, section):
+        # Each plugin is simply a single Python file.
+        plugin_script_paths = []
+
+        for python_script_to_add in glob.glob('plugins/*.py'):
+            
+            if python_script_to_add == "plugins/__init__.py":
+                continue
+
+            plugin_script_paths.append(python_script_to_add)
+
+        for script_path in plugin_script_paths:
+            # import the module
+            module_name, __ = os.path.splitext((os.path.
+                                                basename(script_path)))
+            plugin = __import__("plugins." + module_name,
+                                fromlist=["change_soup"])
+            change_soup_function = getattr(plugin, "change_soup")
+
+            # do the thing
+            plugin.change_soup(self, section)
+
+        # limitation of bs4
+        section_wrapper = section.soup.new_tag("section")
+        section_wrapper["id"] = section.name
+
+        section_wrapper.append(section.soup)
+
+        return section_wrapper
 
     @classmethod
-    def put_in_nice_bowl(cls, soup):
+    def add_theme_to_soup(cls, soup):
         """Let's present our soup nicely!
         
         Prepend <style> element whose contents
@@ -230,85 +216,10 @@ class AdventureDoc(object):
         soup.append(init_script)
 
     @classmethod
-    def build_section(cls, file_contents, file_name,
-                      ordered_section_file_names):
-
-        """Create the HTML for the provided file contents!
-
-        Arguments:
-            file_contents (str):
-            file_name (str):
-            ordered_section_file_names (list[str]):
-
-        Returns:
-            BeautifulSoup: --
-
-        """
-
-        total_section_file_names = len(ordered_section_file_names)
-        file_name_index = ordered_section_file_names.index(file_name)
-
-        # Transform our markdown file contents into soup which
-        # has been graced by our special seasoning!
-        html = markdown.markdown(file_contents)
-        section_soup = BeautifulSoup(html, "html.parser")
-        cls.add_special_seasoning(section_soup)
-
-        # Section Progress/Position
-        cls.prepend_progress_bar(section_soup, file_name_index + 1,
-                                 total_section_file_names)
-
-        # If there's a next section add the "next section" link!
-        try:
-            next_file_name = ordered_section_file_names[file_name_index + 1]
-            section_name = section_id(next_file_name)
-            link = section_soup.new_tag("a", href="#" + section_name)
-            link["class"] = "next"
-            link.string = "Next Section"
-            section_soup.append(link)
-
-        except IndexError:
-            pass
-
-        section_wrapper = section_soup.new_tag("section")
-        section_wrapper["id"] = section_id(file_name)
-
-        section_wrapper.append(section_soup)
-
-        return section_wrapper
-
-    @classmethod
     def from_directory(cls, directory):
-        """Build an AdventureDoc by processing a directory.
+        ordered_sections = cls.get_sections(directory)
 
-        Arguments:
-            directory (str): Path to the directory containing
-                the ORDER file along with the sections as
-                markdown files.
-
-        Returns:
-            AdventureDoc:
-
-        """
-
-        ordered_section_file_names = cls.get_order(directory)
-        all_sections_soup = BeautifulSoup('', 'html.parser')
-
-        for file_name in ordered_section_file_names:
-            # The ORDER file specifies each filename relative to itself, thusly,
-            # we must prepend the directory these files are in to read them.
-            file_path = os.path.join(directory, file_name)
-
-            with open(file_path) as f:
-                file_contents = f.read()
-
-            section_soup = cls.build_section(file_contents, file_name,
-                                             ordered_section_file_names)
-            all_sections_soup.append(section_soup)
-
-        cls.put_in_nice_bowl(all_sections_soup)
-
-        return AdventureDoc(all_sections_soup)
+        return AdventureDoc(ordered_sections)
 
 
 if __name__ == '__main__':
@@ -316,5 +227,5 @@ if __name__ == '__main__':
     source_directory = arguments["<source>"]
     adoc = AdventureDoc.from_directory(source_directory)
 
-    with open(arguments["<destination>"], 'w') as f:
-        f.write(str(adoc))
+    with open(arguments["<destination>"], 'wb') as f:
+        f.write(adoc.build())
