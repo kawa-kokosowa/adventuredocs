@@ -1,4 +1,5 @@
-def change_soup(cls, soup):
+def change_soup(adventuredoc, section):
+    soup = section.soup
 
     for ul in soup.find_all("ul"):
         # check if preceeding element is a paragraph
@@ -14,7 +15,7 @@ def change_soup(cls, soup):
         # platform is osx.
 
         if ((previous_paragraph is not None) and
-            (previous_paragraph.text == cls.SECTION_CHOICE_KEYWORD)):
+            (previous_paragraph.text == adventuredoc.SECTION_CHOICE_KEYWORD)):
 
 
             # Create a <nav> container and put a paragraph
@@ -29,7 +30,7 @@ def change_soup(cls, soup):
             # We're going to make each LI's contents a link
             # to the markdown file it specifies!
             for li in ul.find_all("li"):
-                section_name = cls.section_id(li.string)
+                section_name, __ = li.string.rsplit('.', 1)
                 link = soup.new_tag("a", href="#%s" % section_name)
                 link.string = section_name
 
