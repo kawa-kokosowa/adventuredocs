@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # encoding=utf8
 
 """AdventureDocs
@@ -16,7 +17,7 @@ section" link per section (while you can still present
 options to jump to other sections).
 
 Usage:
-    adocs <source> <destination>
+    adocs <source> [<destination>]
 
 """
 
@@ -24,6 +25,8 @@ import os
 import glob
 import docopt
 import markdown
+import pkgutil
+from adventuredocs import plugins
 
 from bs4 import BeautifulSoup
 
@@ -91,7 +94,7 @@ class AdventureDoc(object):
 
     """
 
-    STYLESHEET = "style.css"
+    STYLESHEET = pkgutil.get_data("adventuredocs", "style.css")
     SECTION_CHOICE_KEYWORD = "NEXT_SECTION:"
     HIGHLIGHTJS_CSS = ("http://cdnjs.cloudflare.com/ajax/libs/highlight.js/"
                        "9.2.0/styles/default.min.css")
@@ -142,25 +145,11 @@ class AdventureDoc(object):
     # NOTE: this currently actually changes the section's
     # beautiful soup but should make copy instead!
     def use_plugins_and_wrap(self, section):
-        # Each plugin is simply a single Python file.
-        plugin_script_paths = []
 
-        for python_script_to_add in glob.glob('plugins/*.py'):
-            
-            if python_script_to_add == "plugins/__init__.py":
-                continue
-
-            plugin_script_paths.append(python_script_to_add)
-
-        for script_path in plugin_script_paths:
-            # import the module
-            module_name, __ = os.path.splitext((os.path.
-                                                basename(script_path)))
-            plugin = __import__("plugins." + module_name,
-                                fromlist=["change_soup"])
+        for _, module_name, _ in pkgutil.iter_modules(plugins.__path__):
+            module_name = "adventuredocs.plugins." + module_name
+            plugin = __import__(module_name, fromlist=["change_soup"])
             change_soup_function = getattr(plugin, "change_soup")
-
-            # do the thing
             plugin.change_soup(self, section)
 
         # limitation of bs4
@@ -191,8 +180,7 @@ class AdventureDoc(object):
 
         """
 
-        with open(cls.STYLESHEET) as f:
-            stylesheet_contents = f.read()
+        stylesheet_contents = cls.STYLESHEET
 
         # Add our custom stylesheet
         style = soup.new_tag('style')
@@ -222,10 +210,12 @@ class AdventureDoc(object):
         return AdventureDoc(ordered_sections)
 
 
-if __name__ == '__main__':
+def main():
     arguments = docopt.docopt(__doc__)
     source_directory = arguments["<source>"]
     adoc = AdventureDoc.from_directory(source_directory)
 
-    with open(arguments["<destination>"], 'wb') as f:
+    destination = arguments["<destination>"] or "adocs-output.html"
+
+    with open(destination, 'wb') as f:
         f.write(adoc.build())

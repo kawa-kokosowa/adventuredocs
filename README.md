@@ -14,8 +14,8 @@ file which specifies the default order of the sections.
 
 All you have to do to get started is:
 
-  1. `pip install -r requirements.txt`
-  2. `python adocs.py testdocs outputfile.html`
+  1. `pip install -r requirements.txt .`
+  2. `adocs testdocs outputfile.html`
 
 Then you can view `outputfile.html` in your web browser!
 
