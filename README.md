@@ -1,5 +1,7 @@
 # AdventureDocs
 
+[![PyPI Version](https://img.shields.io/pypi/v/AdventureDocs.svg?style=flat-square)](https://pypi.python.org/pypi/AdventureDocs/)
+
 Choose Your Own Adventure style software documentation from markdown.
 
 Markdown source, when parsed, outputs to a single HTML page.
