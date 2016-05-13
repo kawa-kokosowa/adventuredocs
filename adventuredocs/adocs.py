@@ -94,6 +94,16 @@ class AdventureDoc(object):
 
     """
 
+    # TODO: <title> never gets set
+    BASE_HTML = """
+                <!DOCTYPE html>
+                <html>
+                  <head>
+                  </head>
+                  <body>
+                  </body>
+                </html>
+                """
     STYLESHEET = pkgutil.get_data("adventuredocs", "style.css")
     SECTION_CHOICE_KEYWORD = "NEXT_SECTION:"
     HIGHLIGHTJS_CSS = ("http://cdnjs.cloudflare.com/ajax/libs/highlight.js/"
@@ -105,11 +115,12 @@ class AdventureDoc(object):
         self.sections = sections
 
     def build(self):
-        all_sections_wrapper = BeautifulSoup('', 'html.parser')
+        all_sections_wrapper = BeautifulSoup(self.BASE_HTML,
+                                             'html.parser')
 
         for section_soup in self.sections:
             section_soup = self.use_plugins_and_wrap(section_soup)
-            all_sections_wrapper.append(section_soup)
+            all_sections_wrapper.body.append(section_soup)
 
         self.add_theme_to_soup(all_sections_wrapper)
 
@@ -180,28 +191,29 @@ class AdventureDoc(object):
 
         """
 
+        head = soup.head
         stylesheet_contents = cls.STYLESHEET
 
         # Add our custom stylesheet
         style = soup.new_tag('style')
         style.string = stylesheet_contents
-        soup.insert(0, style)
+        head.insert(0, style)
 
         # Add the HighlightJS StyleSheet
         highlightjs_css = soup.new_tag('link')
         highlightjs_css["rel"] = 'stylesheet'
         highlightjs_css['href'] = cls.HIGHLIGHTJS_CSS
-        soup.insert(0, highlightjs_css)
+        head.insert(0, highlightjs_css)
 
         # Add the HighlightJS JavaScript
         highlightjs_js = soup.new_tag('script')
         highlightjs_js["src"] = cls.HIGHLIGHTJS_JS
-        soup.insert(0, highlightjs_js)
+        head.insert(0, highlightjs_js)
 
         # Add the execute script/init for HighlightJS
         init_script = soup.new_tag('script')
         init_script.string = 'hljs.initHighlightingOnLoad();'
-        soup.append(init_script)
+        head.append(init_script)
 
     @classmethod
     def from_directory(cls, directory):
