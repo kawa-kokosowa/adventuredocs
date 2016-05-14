@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# encoding=utf8
+# -*- coding: utf-8 -*-
 
 """AdventureDocs
 
@@ -51,7 +51,7 @@ class Section(object):
 
     @property
     def contents(self):
-        return str(self.soup).encode("UTF-8")
+        return self.soup.prettify()
 
     @classmethod
     def from_file(cls, section_index, path_to_markdown_file):
@@ -68,6 +68,8 @@ class Section(object):
         """
 
         with open(path_to_markdown_file) as f:
+            # markdown module strictly only
+            # supports UTF-8
             file_contents = unicode(f.read(), 'utf-8')
 
         html = markdown.markdown(file_contents)
@@ -101,8 +103,8 @@ class AdventureDoc(object):
 
         # Use collected sections with jinja
         return (Environment().from_string(self.TEMPLATE)
-                .render(title='AdventureDocs',
-                        sections=self.sections)).encode("UTF-8")
+                .render(title=u'AdventureDocs',
+                        sections=self.sections)).encode('UTF-8')
 
     @staticmethod
     def get_sections(directory):
@@ -157,5 +159,5 @@ def main():
 
     destination = arguments["<destination>"] or "adocs-output.html"
 
-    with open(destination, 'wb') as f:
+    with open(destination, 'w') as f:
         f.write(adoc.build())
