@@ -19,5 +19,5 @@ setup(
     },
     include_package_data=True,
     package_dir={'adventuredocs': 'adventuredocs'},
-    package_data={'adventuredocs': ['style.css']}
+    package_data={'adventuredocs': ['layout.html']}
 )

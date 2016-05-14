@@ -26,9 +26,10 @@ import glob
 import docopt
 import markdown
 import pkgutil
-from adventuredocs import plugins
 
+from adventuredocs import plugins
 from bs4 import BeautifulSoup
+from jinja2 import Environment, FileSystemLoader
 
 
 class Section(object):
@@ -47,6 +48,10 @@ class Section(object):
         self.name = name
         self.path = path
         self.soup = soup
+
+    @property
+    def contents(self):
+        return str(self.soup).encode("UTF-8")
 
     @classmethod
     def from_file(cls, section_index, path_to_markdown_file):
@@ -81,50 +86,23 @@ class Section(object):
 class AdventureDoc(object):
     """A directory of markdown files, with an ORDER file.
 
-    Constants:
-        STYLESHEET (str): Stylesheet file relative to
-            current directory. The stylesheet's contents
-            are prepended to the end-result HTML.
-        SECTION_CHOICE_KEYWORD (str): Triggers a proceeding
-            list to be a list of links to other sections.
-        HIGHLIGHTJS_CSS (str): Hosted HighlightJS CSS/stylesheet
-            URI. See: highlightjs.org.
-        HIGHLIGHTJS_JS (str): Hosted HighlightJS JavaScript
-            URI. See: highlightjs.org.
-
     """
 
-    # TODO: <title> never gets set
-    BASE_HTML = """
-                <!DOCTYPE html>
-                <html>
-                  <head>
-                  </head>
-                  <body>
-                  </body>
-                </html>
-                """
-    STYLESHEET = pkgutil.get_data("adventuredocs", "style.css")
     SECTION_CHOICE_KEYWORD = "NEXT_SECTION:"
-    HIGHLIGHTJS_CSS = ("http://cdnjs.cloudflare.com/ajax/libs/highlight.js/"
-                       "9.2.0/styles/default.min.css")
-    HIGHLIGHTJS_JS = ("http://cdnjs.cloudflare.com/ajax/libs/highlight.js/"
-                      "9.2.0/highlight.min.js")
+    TEMPLATE = pkgutil.get_data("adventuredocs", "layout.html")
 
     def __init__(self, sections):
         self.sections = sections
 
     def build(self):
-        all_sections_wrapper = BeautifulSoup(self.BASE_HTML,
-                                             'html.parser')
 
         for section_soup in self.sections:
-            section_soup = self.use_plugins_and_wrap(section_soup)
-            all_sections_wrapper.body.append(section_soup)
+            section_soup = self.use_plugins(section_soup)
 
-        self.add_theme_to_soup(all_sections_wrapper)
-
-        return all_sections_wrapper.prettify().encode("UTF-8")
+        # Use collected sections with jinja
+        return (Environment().from_string(self.TEMPLATE)
+                .render(title='AdventureDocs',
+                        sections=self.sections)).encode("UTF-8")
 
     @staticmethod
     def get_sections(directory):
@@ -155,7 +133,7 @@ class AdventureDoc(object):
 
     # NOTE: this currently actually changes the section's
     # beautiful soup but should make copy instead!
-    def use_plugins_and_wrap(self, section):
+    def use_plugins(self, section):
 
         for _, module_name, _ in pkgutil.iter_modules(plugins.__path__):
             module_name = "adventuredocs.plugins." + module_name
@@ -163,57 +141,7 @@ class AdventureDoc(object):
             change_soup_function = getattr(plugin, "change_soup")
             plugin.change_soup(self, section)
 
-        # limitation of bs4
-        section_wrapper = section.soup.new_tag("section")
-        section_wrapper["id"] = section.name
-
-        section_wrapper.append(section.soup)
-
-        return section_wrapper
-
-    @classmethod
-    def add_theme_to_soup(cls, soup):
-        """Let's present our soup nicely!
-        
-        Prepend <style> element whose contents
-        is from the STYLESHEET file. Also add
-        the code necessary for syntax highlighting.
-
-        Does not return anything; this modifies
-        the supplies soup.
-
-        Arguments:
-            soup (BeautifulSoup): The soup to add
-                style to.
-
-        Raises:
-            IOError: if cls.STYLESHEET not found!
-
-        """
-
-        head = soup.head
-        stylesheet_contents = cls.STYLESHEET
-
-        # Add our custom stylesheet
-        style = soup.new_tag('style')
-        style.string = stylesheet_contents
-        head.insert(0, style)
-
-        # Add the HighlightJS StyleSheet
-        highlightjs_css = soup.new_tag('link')
-        highlightjs_css["rel"] = 'stylesheet'
-        highlightjs_css['href'] = cls.HIGHLIGHTJS_CSS
-        head.insert(0, highlightjs_css)
-
-        # Add the HighlightJS JavaScript
-        highlightjs_js = soup.new_tag('script')
-        highlightjs_js["src"] = cls.HIGHLIGHTJS_JS
-        head.insert(0, highlightjs_js)
-
-        # Add the execute script/init for HighlightJS
-        init_script = soup.new_tag('script')
-        init_script.string = 'hljs.initHighlightingOnLoad();'
-        head.append(init_script)
+        return section
 
     @classmethod
     def from_directory(cls, directory):

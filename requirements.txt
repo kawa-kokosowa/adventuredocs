@@ -1,3 +1,4 @@
 markdown
 docopt
 beautifulsoup4
+jinja2
