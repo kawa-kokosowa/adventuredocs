@@ -6,7 +6,7 @@ Choose Your Own Adventure style software documentation from markdown.
 
 Markdown source, when parsed, outputs to a single HTML page.
 
-Demo: http://lillian-gardenia-seabreeze.github.io/adventuredocs/
+Demo: http://lillian-seabreeze.github.io/adventuredocs/
 
 ## Test it out!
 
