@@ -210,3 +210,17 @@ progress[value]::-webkit-progress-value {
     rgba(255,255,255,.5) 35px,
     rgba(255,255,255,.5) 70px);
 }
+section, .content {
+    width: 85%;
+}
+#toc-left {
+    width: 15%;
+    overflow-y: scroll;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+}
+.logo_img {
+    height: 100px;
+    width: 100px;
+}

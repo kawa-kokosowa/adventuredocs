@@ -44,11 +44,14 @@ class Section(object):
 
     """
 
-    def __init__(self, index, name, path, soup):
+    def __init__(self, index, name, path, soup, title, unit, type):
         self.index = index
         self.name = name
         self.path = path
         self.soup = soup
+        self.title = title
+        self.unit = unit
+        self.type = type
 
     @property
     def contents(self):
@@ -79,11 +82,25 @@ class Section(object):
         # get the file name without the extension
         __, section_file_name = os.path.split(path_to_markdown_file)
         section_name, __ = os.path.splitext(section_file_name)
+        section_title = file_contents.split('\n', 1)[0]
+        section_unit = section_title
+        section_type = 'normal'
+
+        if 'hint' in section_name:
+            section_type = 'hint'
+
+        if '-' in section_title:
+            section_unit = section_title.split('-', 1)[0]
+            section_title = section_title.split('-', 1)[1]
 
         return cls(index=section_index,
                    path=path_to_markdown_file,
                    soup=section_soup,
-                   name=section_name)
+                   name=section_name,
+                   title=section_title,
+                   unit=section_unit,
+                   type=section_type,
+        )
 
 
 class AdventureDoc(object):
