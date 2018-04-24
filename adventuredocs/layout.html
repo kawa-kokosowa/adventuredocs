@@ -1,10 +1,11 @@
+<!-- {{ headercomment }} -->
 <!DOCTYPE html>
 <html>
 <head>
   <title>{{ title }}</title>
-  <script src="http://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.2.0/highlight.min.js">
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.2.0/highlight.min.js">
   </script>
-  <link href="http://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.2.0/styles/default.min.css" rel="stylesheet"/>
+  <link href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.2.0/styles/default.min.css" rel="stylesheet"/>
   <style>
    /*! Typebase.less v0.1.0 | MIT License */
   /* Setup */
@@ -168,7 +169,7 @@
     padding: 3rem;
     position: absolute;
     top: 0;
-    left: 0;
+    right: 0;
     height: 100vh;
     width: 100vw;
     margin: 0 auto;
@@ -178,7 +179,8 @@
   section + section {
     visibility: hidden;
     opacity: 0;
-    transition: all 0.5s;
+   transition: all 0.5s;
+   right: 0;
   }
 
   section:target {
@@ -186,7 +188,7 @@
     opacity: 1;
     transform-style: preserve-3d;
     animation: flip 0.5s;
-  }
+   }
 
   @keyframes flip {
     from { transform: rotateY(180deg); }
@@ -219,15 +221,72 @@
     background-image: repeating-linear-gradient(45deg, transparent, transparent 35px,
       rgba(255,255,255,.5) 35px,
       rgba(255,255,255,.5) 70px);
-  }
+   }
+section, .content {
+    width: 85%;
+}
+#toc-left {
+    width: 15%;
+    overflow-y: scroll;
+    position: absolute;
+    top: 0;
+   bottom: 0;
+   }
+      .toc-title {
+   text-align: center;
+   font-size: 14px;
+   }
+
+   .logo_img {
+   margin-top: 10px;
+   margin-bottom: 25px;
+   width: 95%;
+   }
+   .nav-item{
+   list-style-type: none;
+   font-size: 14px;
+   background-color: #B9B8B5;
+   border: 1px solid #000;
+   padding-left: 5px;
+   padding-right: 5px;
+   margin-right: 5px;
+   line-height: 1rem;
+   }
+   ul {
+   padding-left: 0;
+   margin-left: 0;
+   }
+   .nav-link {
+   a, a:link {
+   font-color: #fff !important;
+   }
+   }
+   .hint {
+   text-align: center;
+   }
   </style>
 </head>
 <body>
+  <div class="content">
   {% for section in sections %}
   <section id="{{ section.name }}">
     {{ section.contents }}
   </section>
   {% endfor %}
+  </div>
+  <div id="toc-left">
+    <img class="logo_img" src="https://github.com/hypatia-software-org/official-assets/blob/gh-pages/logo/logo-sub-black.png?raw=true">
+    <div class="toc-title"><i>Python Coursework</i></div>
+    <ul>
+    {% for section in sections %}
+    {% if section.type == 'normal' %}
+    <li class="nav-item"><a class="nav-link" href="#{{ section.name }}" title="{{ section.title }}">{{ section.unit }}:<br />{{section.title}}</a></li>
+    {% else %}
+    <li class="nav-item hint"><a class="nav-link" href="#{{ section.name }}" title="{{ section.title }}">(Hint)</a></li>
+    {% endif %}
+    {% endfor %}
+    </ul>
+  </div>
   <script>
    hljs.initHighlightingOnLoad();
   </script>
